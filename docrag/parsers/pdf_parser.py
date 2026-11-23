@@ -1,13 +1,15 @@
-"""PDF parser (PyMuPDF).
+"""PDF parser (pdfplumber + pypdfium2).
 
 Produces a :class:`~docrag.ir.Document` from a PDF, page by page. Three
 heuristics compensate for PDF being a layout format rather than a semantic one:
 
-1. **Table extraction** uses PyMuPDF's built-in ``page.find_tables()``. Each
-   detected table becomes a :class:`~docrag.ir.Element` of kind ``table`` with
-   its bounding box stored in :class:`~docrag.ir.SourceRef`, so a chunk can
-   point back to the exact region. PyMuPDF gives no merge info, so cells carry
-   ``row_span=col_span=1`` (this is noted as a known limitation).
+1. **Table extraction** uses pdfplumber's ``page.find_tables()``. Each detected
+   table becomes a :class:`~docrag.ir.Element` of kind ``table`` with its
+   bounding box stored in :class:`~docrag.ir.SourceRef`, so a chunk can point
+   back to the exact region. Cell text is read per-cell from PDFium's
+   ``TextPage.get_text_bounded`` (which applies the Unicode bidi algorithm, so
+   Persian cell text comes out in *logical* order). pdfplumber gives no merge
+   info, so cells carry ``row_span=col_span=1`` (noted as a known limitation).
 
 2. **Reading order** is approximate. Blocks are first grouped into columns (a
    two-column page is detected from a vertical white river), then sorted
@@ -22,6 +24,20 @@ heuristics compensate for PDF being a layout format rather than a semantic one:
 Bounding boxes are kept in PDF points and the page dimensions are stored on
 every :class:`~docrag.ir.SourceRef` so an HTML renderer can draw a highlight
 rectangle to scale.
+
+License note
+------------
+This parser deliberately avoids PyMuPDF (AGPL-3.0), whose network-use clause
+would force a commercial online service such as a chatbot to release its whole
+source tree. It relies instead on two permissively-licensed libraries:
+
+* **pdfplumber** (MIT) — page geometry, character data and table structure.
+* **pypdfium2** (BSD-3-Clause / Apache-2.0, wrapping Google's PDFium which is
+  BSD-3-Clause) — text extraction with native bidi reordering for correct
+  Persian output.
+
+Neither carries a copyleft or network-use obligation, so the parser is safe to
+embed in a closed-source commercial service.
 """
 
 from __future__ import annotations
@@ -30,6 +46,9 @@ import re
 import statistics
 from pathlib import Path
 from typing import Any
+
+import pdfplumber
+import pypdfium2 as pdfium
 
 from ..ids import make_id
 from ..ir import Document, Element, ElementKind, SourceRef, TableCell, TableRow
@@ -44,120 +63,129 @@ _LIST_MARKER_RE = re.compile(
 _BULLET_CHARS = set("•◦●▪–-*")
 _DIGIT_CHARS = set("0123456789۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩.")
 
+# PDFium's bidi reverses a leading list/heading marker "N." to ".N" at the
+# start of an RTL line (it places the terminator before the number). Restore
+# the marker so it reads "۱." / "2.1." and the heading-number regex can fire.
+_MARKER_FLIP_RE = re.compile(
+    r"^\.\s*([0-9\u0660-\u0669\u06F0-\u06F9]+(?:\.[0-9\u0660-\u0669\u06F0-\u06F9]+)*)(?=\s|$)"
+)
+
 
 class PdfParser(BaseParser):
     file_type = "pdf"
 
     def parse(self, path: str | Path, *, doc_id: str | None = None) -> Document:
         path = Path(path)
-        import fitz
+        plb = pdfplumber.open(str(path))
+        doc_pdfium = pdfium.PdfDocument(str(path))
+        try:
+            elements: list[Element] = []
+            section_path: list[tuple[int, str]] = []
+            body_size = self._modal_body_size(plb)
+            # Per-parse heading size buckets (instance attribute, no globals).
+            self._heading_buckets = self._heading_buckets(plb, body_size)
+            ordinal = 0
 
-        doc_pdf = fitz.open(str(path))
-        elements: list[Element] = []
-        section_path: list[tuple[int, str]] = []
-        body_size = self._modal_body_size(doc_pdf)
-        # Per-parse heading size buckets (instance attribute, no globals).
-        self._heading_buckets = self._heading_buckets(doc_pdf, body_size)
-        ordinal = 0
+            for page_number, page in enumerate(plb.pages, start=1):
+                page_w, page_h = page.width, page.height
+                fpage = doc_pdfium[page_number - 1]
+                tp = fpage.get_textpage()
+                table_regions: list[Any] = []
 
-        for page_number, page in enumerate(doc_pdf, start=1):
-            page_w, page_h = page.rect.width, page.rect.height
-            table_regions: list[Any] = []
-
-            # ---- tables first so text blocks can skip their regions -------- #
-            tables = self._find_tables(page)
-            tbl_ordinal = 0
-            for tbl in tables:
-                bbox = tbl["bbox"]
-                table_regions.append(bbox)
-                rows = tbl["rows"]
-                if not rows:
-                    continue
-                ordinal += 1
-                tbl_ordinal += 1
-                trs = [
-                    TableRow(
-                        index=i,
-                        cells=[TableCell(text=self.normalize(str(cell or ""))) for cell in row],
-                        is_header=(i == 0 and tbl.get("has_header", False)),
-                    )
-                    for i, row in enumerate(rows)
-                ]
-                el = Element(
-                    id=make_id(path.name, f"p{page_number}", "table", str(tbl_ordinal)),
-                    kind=ElementKind.TABLE,
-                    source=SourceRef(
-                        file=path.name,
-                        page=page_number,
-                        bbox=[round(c, 2) for c in bbox],
-                        page_width=page_w,
-                        page_height=page_h,
-                    ),
-                    rows=trs,
-                    meta={
-                        "row_count": len(trs),
-                        "col_count": max((len(r.cells) for r in trs), default=0),
-                    },
-                )
-                el.section = [t for _, t in section_path]
-                elements.append(el)
-
-            # ---- text blocks in reading order ------------------------------ #
-            blocks = self._reading_order_blocks(page, page_w)
-            for blk in blocks:
-                if any(_rects_overlap(blk["bbox"], r) for r in table_regions):
-                    continue
-                text, dom_size = self._block_text(blk)
-                if not text.strip():
-                    continue
-                items = self._split_block(text, dom_size)
-                for item in items:
+                # ---- tables first so text blocks can skip their regions ---- #
+                tables = self._find_tables(page, tp, page_h)
+                tbl_ordinal = 0
+                for tbl in tables:
+                    bbox = tbl["bbox"]
+                    table_regions.append(bbox)
+                    rows = tbl["rows"]
+                    if not rows:
+                        continue
                     ordinal += 1
-                    el = self._make_element(
-                        item, path, page_number, blk["bbox"], page_w, page_h,
-                        ordinal,
+                    tbl_ordinal += 1
+                    trs = [
+                        TableRow(
+                            index=i,
+                            cells=[TableCell(text=self.normalize(str(cell or ""))) for cell in row],
+                            is_header=(i == 0 and tbl.get("has_header", False)),
+                        )
+                        for i, row in enumerate(rows)
+                    ]
+                    el = Element(
+                        id=make_id(path.name, f"p{page_number}", "table", str(tbl_ordinal)),
+                        kind=ElementKind.TABLE,
+                        source=SourceRef(
+                            file=path.name,
+                            page=page_number,
+                            bbox=[round(c, 2) for c in bbox],
+                            page_width=page_w,
+                            page_height=page_h,
+                        ),
+                        rows=trs,
+                        meta={
+                            "row_count": len(trs),
+                            "col_count": max((len(r.cells) for r in trs), default=0),
+                        },
                     )
-                    if el.kind == ElementKind.HEADING and 0 < el.level <= 6:
-                        while section_path and section_path[-1][0] >= el.level:
-                            section_path.pop()
-                        section_path.append((el.level, el.text.strip()))
                     el.section = [t for _, t in section_path]
                     elements.append(el)
 
-        sections = self._build_sections(path, elements)
-        page_count = doc_pdf.page_count
-        meta = doc_pdf.metadata or {}
-        doc_pdf.close()
-        return Document(
-            id=doc_id or path.stem,
-            source_file=path.name,
-            file_type=self.file_type,
-            elements=elements,
-            sections=sections,
-            metadata=self.make_metadata(
-                path,
-                {
-                    "page_count": page_count,
-                    "title": meta.get("title", "") or "",
-                    "author": meta.get("author", "") or "",
-                    "body_font_size": round(body_size, 2) if body_size else None,
-                    "heading_sizes": [round(s, 2) for s in self._heading_buckets],
-                },
-            ),
-        )
+                # ---- text blocks in reading order ------------------------- #
+                lines = self._build_lines(page, tp, page_h)
+                blocks = self._group_blocks(lines)
+                ordered = self._reading_order_blocks(blocks, page_w)
+                for blk in ordered:
+                    if any(_rects_overlap(blk["bbox"], r) for r in table_regions):
+                        continue
+                    text, dom_size = blk["text"], blk["dom"]
+                    if not text.strip():
+                        continue
+                    items = self._split_block(text, dom_size)
+                    for item in items:
+                        ordinal += 1
+                        el = self._make_element(
+                            item, path, page_number, blk["bbox"], page_w, page_h,
+                            ordinal,
+                        )
+                        if el.kind == ElementKind.HEADING and 0 < el.level <= 6:
+                            while section_path and section_path[-1][0] >= el.level:
+                                section_path.pop()
+                            section_path.append((el.level, el.text.strip()))
+                        el.section = [t for _, t in section_path]
+                        elements.append(el)
 
-    # -- font analysis ---------------------------------------------------- #
-    def _modal_body_size(self, doc_pdf) -> float:
+            sections = self._build_sections(path, elements)
+            page_count = len(plb.pages)
+            meta = self._doc_metadata(plb)
+            return Document(
+                id=doc_id or path.stem,
+                source_file=path.name,
+                file_type=self.file_type,
+                elements=elements,
+                sections=sections,
+                metadata=self.make_metadata(
+                    path,
+                    {
+                        "page_count": page_count,
+                        "title": meta["title"],
+                        "author": meta["author"],
+                        "body_font_size": round(body_size, 2) if body_size else None,
+                        "heading_sizes": [round(s, 2) for s in self._heading_buckets],
+                    },
+                ),
+            )
+        finally:
+            plb.close()
+            doc_pdfium.close()
+
+    # -- font analysis (over all pages, from pdfplumber chars) ------------- #
+    def _modal_body_size(self, plb) -> float:
         sizes: list[float] = []
-        for page in doc_pdf:
-            for blk in page.get_text("dict")["blocks"]:
-                if "lines" not in blk:
-                    continue
-                for line in blk["lines"]:
-                    for span in line["spans"]:
-                        txt = span.get("text", "")
-                        if txt.strip() and not _BULLET_CHARS.intersection(txt):
-                            sizes.append(float(span.get("size", 0)))
+        for page in plb.pages:
+            for c in page.chars:
+                txt = c.get("text", "")
+                if txt.strip() and not _BULLET_CHARS.intersection(txt):
+                    sizes.append(float(c.get("size", 0)))
         if not sizes:
             return 0.0
         try:
@@ -165,21 +193,17 @@ class PdfParser(BaseParser):
         except statistics.StatisticsError:
             return statistics.median(sizes)
 
-    def _heading_buckets(self, doc_pdf, body_size: float) -> list[float]:
+    def _heading_buckets(self, plb, body_size: float) -> list[float]:
         """Return descending font sizes that count as headings (levels 1..N)."""
         if not body_size:
             return []
         big: list[float] = []
-        for page in doc_pdf:
-            for blk in page.get_text("dict")["blocks"]:
-                if "lines" not in blk:
-                    continue
-                for line in blk["lines"]:
-                    for span in line["spans"]:
-                        size = round(float(span.get("size", 0)), 1)
-                        txt = span.get("text", "").strip()
-                        if size >= body_size * 1.15 and len(txt) <= 120 and txt:
-                            big.append(size)
+        for page in plb.pages:
+            for c in page.chars:
+                size = round(float(c.get("size", 0)), 1)
+                txt = c.get("text", "").strip()
+                if size >= body_size * 1.15 and len(txt) <= 120 and txt:
+                    big.append(size)
         if not big:
             return []
         # Bucket to 0.5pt, sort desc, take distinct buckets.
@@ -187,78 +211,143 @@ class PdfParser(BaseParser):
         return buckets[:6]
 
     # -- tables ----------------------------------------------------------- #
-    def _find_tables(self, page) -> list[dict[str, Any]]:
-        """Detect tables on ``page`` and extract cell text via clip.
+    def _find_tables(self, page, tp, page_h: float) -> list[dict[str, Any]]:
+        """Detect tables via pdfplumber and read cell text via PDFium.
 
-        PyMuPDF's ``Table.extract()`` returns Persian cell text in *visual*
-        (reversed) order because it does not apply bidi reordering, and for
-        some RTL tables it also transposes rows/columns. We therefore ignore
-        ``extract()`` for the text and re-extract each cell with
-        ``page.get_text("text", clip=bbox)``, which does reorder. Cell bboxes
-        come from ``table.rows[r].cells`` (correct row-major order); we fall
-        back to ``extract()`` only if that structure is unavailable.
+        PDFium's ``get_text_bounded`` applies the Unicode bidi algorithm, so
+        Persian cell text comes out in logical order (``سال`` not ``لاس``),
+        unlike a raw left-to-right char sweep which reverses RTL runs.
         """
         out: list[dict[str, Any]] = []
         try:
-            finder = page.find_tables()
+            tables = page.find_tables()
         except Exception:
             return out
-        for tbl in getattr(finder, "tables", []) or []:
+        for tbl in tables or []:
             bbox = list(tbl.bbox) if tbl.bbox else None
             if bbox is None:
                 continue
-            rows = self._table_rows_via_clip(page, tbl)
+            rows = self._table_rows(tbl, tp, page_h)
             if not rows:
                 continue
             if not any(any(str(c).strip() for c in row) for row in rows):
                 continue
-            has_header = bool(getattr(tbl, "header", None))
+            has_header = len(rows) >= 2
             out.append({"bbox": bbox, "rows": rows, "has_header": has_header})
         return out
 
-    def _table_rows_via_clip(self, page, tbl) -> list[list[str]]:
-        """Extract a row-major grid of cell text using per-cell clip regions."""
-        import fitz
-
-        tbl_rows = getattr(tbl, "rows", None)
-        if tbl_rows:
-            grid: list[list[str]] = []
-            for tr in tbl_rows:
-                cell_bboxes = getattr(tr, "cells", None) or []
-                if not cell_bboxes:
+    def _table_rows(self, tbl, tp, page_h: float) -> list[list[str]]:
+        """Build a row-major grid of cell text using each cell's exact bbox."""
+        grid: list[list[str]] = []
+        for tr in tbl.rows:
+            cell_bboxes = getattr(tr, "cells", None) or []
+            if not cell_bboxes:
+                continue
+            row_text: list[str] = []
+            for b in cell_bboxes:
+                if b is None:
+                    row_text.append("")
                     continue
-                row_text: list[str] = []
-                for b in cell_bboxes:
-                    if b is None:
-                        row_text.append("")
-                        continue
-                    rect = fitz.Rect(b[0], b[1], b[2], b[3])
-                    txt = page.get_text("text", clip=rect).strip().replace("\n", " ")
-                    row_text.append(txt)
-                grid.append(row_text)
-            if grid:
-                return grid
-        # Fallback: extract() (text may be reversed for RTL, but keeps grid).
-        try:
-            extracted = tbl.extract()
-        except Exception:
+                txt = self._bounded_text(tp, b, page_h).replace("\n", " ")
+                row_text.append(txt)
+            grid.append(row_text)
+        return grid
+
+    # -- lines / blocks (geometry from pdfplumber, text from PDFium) ------ #
+    def _build_lines(self, page, tp, page_h: float) -> list[dict[str, Any]]:
+        """Group page chars into visual lines; read each line's logical text."""
+        chars = page.chars
+        if not chars:
             return []
-        return [[("" if c is None else c) for c in row] for row in extracted]
+        chars_sorted = sorted(chars, key=lambda c: (round(c["top"], 1), c["x0"]))
+        raw_lines: list[list[dict]] = []
+        cur: list[dict] = []
+        cur_top: float | None = None
+        line_tol = 3.0  # points; chars on the same visual line agree to ~1pt
+        for c in chars_sorted:
+            top = c["top"]
+            if cur_top is None or abs(top - cur_top) <= line_tol:
+                cur.append(c)
+                if cur_top is None:
+                    cur_top = top
+            else:
+                raw_lines.append(cur)
+                cur = [c]
+                cur_top = top
+        if cur:
+            raw_lines.append(cur)
+
+        out: list[dict[str, Any]] = []
+        for ln in raw_lines:
+            nonws = [c for c in ln if c["text"].strip()]
+            if not nonws:
+                continue
+            x0 = min(c["x0"] for c in ln)
+            x1 = max(c["x1"] for c in ln)
+            top = min(c["top"] for c in ln)
+            bot = max(c["bottom"] for c in ln)
+            sizes = [
+                round(float(c.get("size", 0)), 1)
+                for c in nonws
+                if not _BULLET_CHARS.intersection(c["text"])
+            ]
+            dom = self._mode_or_median(sizes)
+            text = self._bounded_text(tp, (x0, top, x1, bot), page_h)
+            out.append({"bbox": [x0, top, x1, bot], "dom": dom, "text": text})
+        return out
+
+    def _group_blocks(self, lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Group lines into blocks. A heading-sized line is its own block."""
+        if not lines:
+            return []
+        blocks: list[dict[str, Any]] = []
+        current: list[dict[str, Any]] = []
+
+        def flush() -> None:
+            if current:
+                blocks.append(self._make_block(current))
+                current.clear()
+
+        for line in lines:
+            if self._is_heading_line(line):
+                flush()
+                blocks.append(self._make_block([line]))
+                continue
+            if current:
+                prev = current[-1]
+                gap = line["bbox"][1] - prev["bbox"][3]
+                line_h = prev["bbox"][3] - prev["bbox"][1]
+                if gap > max(6.0, 0.6 * line_h):
+                    flush()
+            current.append(line)
+        flush()
+        return blocks
+
+    def _make_block(self, lines: list[dict[str, Any]]) -> dict[str, Any]:
+        x0 = min(l["bbox"][0] for l in lines)
+        y0 = min(l["bbox"][1] for l in lines)
+        x1 = max(l["bbox"][2] for l in lines)
+        y1 = max(l["bbox"][3] for l in lines)
+        sizes = [l["dom"] for l in lines if l["dom"]]
+        dom = self._mode_or_median(sizes)
+        text = "\n".join(l["text"] for l in lines)
+        return {"bbox": [x0, y0, x1, y1], "dom": dom, "text": text}
+
+    def _is_heading_line(self, line: dict[str, Any]) -> bool:
+        buckets = getattr(self, "_heading_buckets", []) or []
+        if not buckets or not line["dom"]:
+            return False
+        if len(line["text"]) > 120:
+            return False
+        return self._heading_level_for_size(line["dom"]) is not None
 
     # -- reading order ---------------------------------------------------- #
-    def _reading_order_blocks(self, page, page_w: float) -> list[dict[str, Any]]:
-        raw = page.get_text("dict")["blocks"]
-        blocks = [
-            {"bbox": b["bbox"], "lines": b["lines"]}
-            for b in raw
-            if b.get("type", 0) == 0 and "lines" in b
-        ]
+    def _reading_order_blocks(self, blocks, page_w: float) -> list[dict[str, Any]]:
         if not blocks:
             return []
         split_x = self._column_split(blocks, page_w)
         if split_x is None:
-            blocks.sort(key=lambda b: (round(b["bbox"][1] / 5), b["bbox"][0]))
-            return blocks
+            return sorted(blocks, key=lambda b: (round(b["bbox"][1] / 5), b["bbox"][0]))
         # Two-column: left column first (by y), then right column.
         left = [b for b in blocks if (b["bbox"][0] + b["bbox"][2]) / 2 < split_x]
         right = [b for b in blocks if (b["bbox"][0] + b["bbox"][2]) / 2 >= split_x]
@@ -275,7 +364,6 @@ class PdfParser(BaseParser):
         mid = statistics.median(centers)
         gap_lo = page_w * 0.35
         gap_hi = page_w * 0.65
-        # Distinct left/right populations with a clear gap around mid.
         left = [c for c in centers if c < mid]
         right = [c for c in centers if c >= mid]
         if len(left) < 3 or len(right) < 3:
@@ -285,22 +373,6 @@ class PdfParser(BaseParser):
         return None
 
     # -- block → text ----------------------------------------------------- #
-    @staticmethod
-    def _block_text(blk) -> tuple[str, float]:
-        lines: list[str] = []
-        sizes: list[float] = []
-        for line in blk["lines"]:
-            spans = line["spans"]
-            line_text = "".join(s.get("text", "") for s in spans)
-            if line_text.strip():
-                lines.append(line_text)
-                for s in spans:
-                    if s.get("text", "").strip():
-                        sizes.append(float(s.get("size", 0)))
-        text = "\n".join(lines)
-        dom = statistics.mode(round(s, 1) for s in sizes) if sizes else 0.0
-        return text, dom
-
     def _split_block(self, text: str, dom_size: float) -> list[dict]:
         """Split a block's text into one or more item dicts.
 
@@ -417,6 +489,44 @@ class PdfParser(BaseParser):
             (stack[-1].children if stack else root).append(sec)
             stack.append(sec)
         return root
+
+    # -- helpers ---------------------------------------------------------- #
+    @staticmethod
+    def _bounded_text(tp, bbox, page_h: float) -> str:
+        """Read logical-order text inside ``bbox`` via PDFium.
+
+        pdfplumber bboxes are ``(x0, top, x1, bottom)`` with a top-left origin
+        (``top`` grows downward). PDFium's ``get_text_bounded`` takes
+        ``(left, bottom, right, top)`` in PDF user space (bottom-left origin),
+        so the vertical axis is flipped.
+        """
+        x0, top, x1, bottom = bbox
+        raw = tp.get_text_bounded(x0, page_h - bottom, x1, page_h - top)
+        txt = raw.replace("\r\n", "\n").replace("\r", "").strip()
+        # Undo PDFium's leading-marker reversal (".۱" → "۱.").
+        txt = _MARKER_FLIP_RE.sub(r"\1.", txt)
+        return txt
+
+    @staticmethod
+    def _mode_or_median(values: list[float]) -> float:
+        if not values:
+            return 0.0
+        try:
+            return statistics.mode(round(v, 1) for v in values)
+        except statistics.StatisticsError:
+            return statistics.median(values)
+
+    @staticmethod
+    def _doc_metadata(plb) -> dict[str, str]:
+        m = plb.metadata or {}
+
+        def _get(key: str) -> str:
+            for mk, mv in m.items():
+                if mk.lower().lstrip("/") == key and mv:
+                    return str(mv)
+            return ""
+
+        return {"title": _get("title"), "author": _get("author")}
 
 
 def _rects_overlap(a, b, *, tol: float = 1.0) -> bool:

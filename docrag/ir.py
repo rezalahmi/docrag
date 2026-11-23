@@ -11,8 +11,8 @@ Design notes
 * Every :class:`Element` carries a :class:`SourceRef` so any chunk can be
   traced back to a page + bounding box (PDF) or paragraph index (DOCX).
 * Tables keep a real grid with ``row_span`` / ``col_span`` / ``vmerge`` so the
-  DOCX merge-cell structure survives. PDF tables (PyMuPDF has no merge info)
-  fill these with span=1 and ``vmerge=None``.
+  DOCX merge-cell structure survives. PDF tables (pdfplumber gives no merge
+  info) fill these with span=1 and ``vmerge=None``.
 * ``section`` on each element is the *path* of heading texts from the document
   root down to that element (e.g. ``["گزارش مالی", "عملکرد سالانه"]``). It is
   materialised at parse time so the chunker does not have to walk a tree.

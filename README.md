@@ -22,9 +22,10 @@ anything is embedded.
         ┌───────┴────────┐
         ▼                ▼
    PDF Parser       DOCX Parser        ← Parser Layer
-   (PyMuPDF +       (python-docx +
-    tables +         numbering XML +
-    reading order)   merge cells)
+   (pdfplumber +    (python-docx +
+    pypdfium2 +       numbering XML +
+    tables +          merge cells)
+    reading order)
         │                │
         └───────┬────────┘
                 ▼
@@ -47,7 +48,7 @@ anything is embedded.
 
 | Layer | Module | Responsibility |
 |---|---|---|
-| Parser | `docrag.parsers` | PDF (PyMuPDF) / DOCX (python-docx) → IR |
+| Parser | `docrag.parsers` | PDF (pdfplumber + pypdfium2) / DOCX (python-docx) → IR |
 | Document IR | `docrag.ir` | File-type-independent structured model |
 | Semantic Chunker | `docrag.chunker` | Per-type chunking (text / list / table / footnote) |
 | Evaluation | `docrag.validator` | Schema + reference integrity + quality metrics |
@@ -202,8 +203,9 @@ Persian text degrades retrieval precision silently unless normalised:
 - Arabic-Indic digits `٠١` vs Persian digits `۰۱` → numbers don't match.
 
 `docrag.normalizer` fixes all of these (configurable digit handling), and the
-PDF parser extracts table cells via clip regions so RTL text comes out in
-**logical order** (PyMuPDF's `extract()` returns it reversed for Persian).
+PDF parser reads each table cell via PDFium's `get_text_bounded`, which applies
+the Unicode bidi algorithm so RTL text comes out in **logical order**
+(`سال`, not the reversed `لاس` that a naive left-to-right char sweep produces).
 
 ---
 
@@ -265,11 +267,11 @@ for the DOCX→PDF conversion).
 | DOCX list numbering (multi-level + restart) | ✅ implemented |
 | DOCX footnotes | ✅ implemented |
 | PDF table detection | ✅ implemented |
-| PDF table cell text (RTL-correct) | ✅ implemented (clip extraction) |
+| PDF table cell text (RTL-correct) | ✅ implemented (PDFium bidi reordering) |
 | PDF reading order | ~ approximate (2-column heuristic) |
 | PDF heading detection | ~ font-size heuristic |
 | OCR of scanned pages | ❌ not in v2 (removed by design) |
-| PDF merged-cell detection | ❌ PyMuPDF gives no merge info → span-1 |
+| PDF merged-cell detection | ❌ pdfplumber gives no merge info → span-1 |
 | Equation extraction | ❌ not yet |
 | Retrieval evaluation | ❌ not yet (evaluation layer = validation + fixtures) |
 
@@ -308,3 +310,28 @@ docrag/
 ## License
 
 MIT.
+
+### Dependency licensing (commercial / SaaS-safe)
+
+docrag and every runtime dependency is **permissively licensed** — no GPL,
+LGPL, or AGPL component, so the package is safe to embed in a closed-source
+commercial online service (e.g. a chatbot) with no source-disclosure
+obligation.
+
+| Dependency | Purpose | License |
+|---|---|---|
+| `pdfplumber` | PDF page geometry, character data, table structure | MIT |
+| `pypdfium2` | PDF text extraction with native bidi reordering (wraps Google PDFium) | BSD-3-Clause / Apache-2.0 |
+| `python-docx` | DOCX parsing | MIT |
+| `tiktoken` | Token counting for chunk sizing | MIT |
+| `click` | CLI | BSD-3-Clause |
+| `pydantic` | IR validation | MIT |
+
+> **Why not PyMuPDF?** Earlier versions used PyMuPDF for PDF parsing, but
+> PyMuPDF is **AGPL-3.0**: its network-use clause (Section 13) would force any
+> service that lets users interact with it over the network to release its
+> entire source tree under a compatible license. That is incompatible with a
+> closed-source commercial product, so PyMuPDF was removed in favour of
+> pdfplumber + pypdfium2, which produce equivalent results (including correct
+> Persian RTL ordering via PDFium's bidi implementation) under permissive
+> licenses.
