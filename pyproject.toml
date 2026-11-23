@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docrag"
+version = "0.2.0"
+description = "Document preprocessing pipeline for Persian RAG: PDF & DOCX to structured IR, chunks, and HTML."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "docrag contributors" }]
+keywords = ["rag", "pdf", "docx", "persian", "farsi", "chunking", "nlp", "document-processing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Text Processing",
+    "Topic :: Text Processing :: Linguistic",
+]
+dependencies = [
+    "pymupdf>=1.23",
+    "python-docx>=1.1",
+    "tiktoken>=0.5",
+    "click>=8.1",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+api = ["fastapi>=0.100", "uvicorn>=0.20"]
+dev = ["pytest>=7", "pytest-cov"]
+all = ["fastapi>=0.100", "uvicorn>=0.20", "pytest>=7", "pytest-cov"]
+
+[project.scripts]
+docrag = "docrag.cli:main"
+
+[project.urls]
+Homepage = "https://example.com/docrag"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["docrag*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"

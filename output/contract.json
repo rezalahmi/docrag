@@ -1,0 +1,748 @@
+{
+  "id": "contract",
+  "source_file": "contract.docx",
+  "file_type": "docx",
+  "schema_version": "0.2",
+  "metadata": {
+    "file_name": "contract.docx",
+    "file_type": "docx",
+    "file_size": 38504,
+    "paragraph_count": 17,
+    "table_count": 1,
+    "footnote_count": 2
+  },
+  "sections": [
+    {
+      "id": "contract.docx::sec::contract.docx_p_0_heading",
+      "title": "قرارداد همکاری خدمات نرم‌افزاری",
+      "level": 1,
+      "number": "",
+      "children": []
+    },
+    {
+      "id": "contract.docx::sec::contract.docx_p_1_heading",
+      "title": "مقدمه و طرفین",
+      "level": 1,
+      "number": "",
+      "children": [
+        {
+          "id": "contract.docx::sec::contract.docx_p_3_heading",
+          "title": "تعاریف",
+          "level": 2,
+          "number": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "contract.docx::sec::contract.docx_p_5_heading",
+      "title": "دامنه خدمات",
+      "level": 1,
+      "number": "",
+      "children": []
+    },
+    {
+      "id": "contract.docx::sec::contract.docx_p_13_heading",
+      "title": "تعهدات مالی",
+      "level": 1,
+      "number": "",
+      "children": []
+    },
+    {
+      "id": "contract.docx::sec::contract.docx_p_15_heading",
+      "title": "تبصره‌ها",
+      "level": 1,
+      "number": "",
+      "children": []
+    }
+  ],
+  "elements": [
+    {
+      "id": "contract.docx::p::0::heading",
+      "type": "heading",
+      "section": [
+        "قرارداد همکاری خدمات نرم‌افزاری"
+      ],
+      "text": "قرارداد همکاری خدمات نرم‌افزاری",
+      "level": 1,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 0,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Heading 1"
+      }
+    },
+    {
+      "id": "contract.docx::p::1::heading",
+      "type": "heading",
+      "section": [
+        "مقدمه و طرفین"
+      ],
+      "text": "مقدمه و طرفین",
+      "level": 1,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 1,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Heading 1"
+      }
+    },
+    {
+      "id": "contract.docx::p::2::para",
+      "type": "paragraph",
+      "section": [
+        "مقدمه و طرفین"
+      ],
+      "text": "این قرارداد در تاریخ ۱۴۰۳/۰۸/۰۱ بین شرکت فناوری‌نوین پارس (کارفرما) و اقای مهندس رضا محمدی (پیمانکار) منعقد می‌گردد. طرفین توافق کردند که می‌باید تمامی تعهدات را رعایت نمایند.",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 2,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Normal"
+      }
+    },
+    {
+      "id": "contract.docx::p::3::heading",
+      "type": "heading",
+      "section": [
+        "مقدمه و طرفین",
+        "تعاریف"
+      ],
+      "text": "تعاریف",
+      "level": 2,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 3,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Heading 2"
+      }
+    },
+    {
+      "id": "contract.docx::p::4::para",
+      "type": "paragraph",
+      "section": [
+        "مقدمه و طرفین",
+        "تعاریف"
+      ],
+      "text": "کارفرما: شرکت درخواست‌کننده خدمات. پیمانکار: شخص حقیقی یا حقوقی اجراکننده. سیستم: نرم‌افزار موضوع قرارداد شامل کلیه ماژول‌ها.",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 4,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Normal"
+      }
+    },
+    {
+      "id": "contract.docx::p::5::heading",
+      "type": "heading",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "دامنه خدمات",
+      "level": 1,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 5,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Heading 1"
+      }
+    },
+    {
+      "id": "contract.docx::p::6::para",
+      "type": "paragraph",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "پیمانکار متعهد می‌گردد خدمات زیر را ارائه نماید:",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 6,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Normal"
+      }
+    },
+    {
+      "id": "contract.docx::p::7::list::7",
+      "type": "list_item",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "طراحی معماری سیستم و پایگاه داده",
+      "level": 0,
+      "list_marker": "۱.",
+      "list_index": 0,
+      "list_id": "num5",
+      "ordered": true,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 7,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "num_id": 5,
+        "ilvl": 0
+      }
+    },
+    {
+      "id": "contract.docx::p::8::list::8",
+      "type": "list_item",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "پیاده‌سازی ماژول‌های اصلی و APIها",
+      "level": 0,
+      "list_marker": "۲.",
+      "list_index": 0,
+      "list_id": "num5",
+      "ordered": true,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 8,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "num_id": 5,
+        "ilvl": 0
+      }
+    },
+    {
+      "id": "contract.docx::p::9::list::9",
+      "type": "list_item",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "انجام تست‌های عملکردی و امنیتی",
+      "level": 0,
+      "list_marker": "۳.",
+      "list_index": 0,
+      "list_id": "num5",
+      "ordered": true,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 9,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "num_id": 5,
+        "ilvl": 0
+      }
+    },
+    {
+      "id": "contract.docx::p::10::para",
+      "type": "paragraph",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "موارد زیر خارج از دامنه این قرارداد است:",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 10,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Normal"
+      }
+    },
+    {
+      "id": "contract.docx::p::11::list::11",
+      "type": "list_item",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "تامین زیرساخت سرور و شبکه",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": "num1",
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 11,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "num_id": 1,
+        "ilvl": 0
+      }
+    },
+    {
+      "id": "contract.docx::p::12::list::12",
+      "type": "list_item",
+      "section": [
+        "دامنه خدمات"
+      ],
+      "text": "پشتیبانی پس از تحویل نهایی",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": "num1",
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 12,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "num_id": 1,
+        "ilvl": 0
+      }
+    },
+    {
+      "id": "contract.docx::p::13::heading",
+      "type": "heading",
+      "section": [
+        "تعهدات مالی"
+      ],
+      "text": "تعهدات مالی",
+      "level": 1,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 13,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Heading 1"
+      }
+    },
+    {
+      "id": "contract.docx::p::14::para",
+      "type": "paragraph",
+      "section": [
+        "تعهدات مالی"
+      ],
+      "text": "مبلغ کل قرارداد ۴٬۵۰۰٬۰۰۰٬۰۰۰ ریال است و بر اساس مراحل پیشرفت پرداخت می‌شود.",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 14,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Normal"
+      }
+    },
+    {
+      "id": "contract.docx::p14::footnote::1",
+      "type": "footnote",
+      "section": [
+        "تعهدات مالی"
+      ],
+      "text": "مبلغ قرارداد به‌صورت ناخالص و شامل مالیات بر ارزش افزوده است.",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 14,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "footnote_id": 1
+      }
+    },
+    {
+      "id": "contract.docx::p14::footnote::2",
+      "type": "footnote",
+      "section": [
+        "تعهدات مالی"
+      ],
+      "text": "هرگونه تاخیر در پرداخت مشمول جریمه روزانه ۰٫۵ درصد خواهد بود.",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 14,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "footnote_id": 2
+      }
+    },
+    {
+      "id": "contract.docx::tbl::0",
+      "type": "table",
+      "section": [
+        "تعهدات مالی"
+      ],
+      "text": "",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [
+        {
+          "index": 0,
+          "is_header": true,
+          "cells": [
+            {
+              "text": "ردیف",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "شرح خدمات",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "مبلغ (ریال)",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "مدت پرداخت",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "is_header": false,
+          "cells": [
+            {
+              "text": "۱",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "طراحی و تحلیل",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "۵۰۰٬۰۰۰٬۰۰۰",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "پیش‌پرداخت",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "is_header": false,
+          "cells": [
+            {
+              "text": "۲",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "پیاده‌سازی",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "۲٬۵۰۰٬۰۰۰٬۰۰۰",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "ماهانه",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "is_header": false,
+          "cells": [
+            {
+              "text": "۳",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "تست و رفع اشکال",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "۱٬۰۰۰٬۰۰۰٬۰۰۰",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "پس از تحویل",
+              "row_span": 2,
+              "col_span": 1,
+              "vmerge": "restart"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "is_header": false,
+          "cells": [
+            {
+              "text": "۴",
+              "row_span": 1,
+              "col_span": 1,
+              "vmerge": null
+            },
+            {
+              "text": "اموزش و مستندسازی",
+              "row_span": 1,
+              "col_span": 2,
+              "vmerge": null
+            }
+          ]
+        }
+      ],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 14,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "row_count": 5,
+        "col_count": 4
+      }
+    },
+    {
+      "id": "contract.docx::p::15::heading",
+      "type": "heading",
+      "section": [
+        "تبصره‌ها"
+      ],
+      "text": "تبصره‌ها",
+      "level": 1,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 15,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Heading 1"
+      }
+    },
+    {
+      "id": "contract.docx::p::16::para",
+      "type": "paragraph",
+      "section": [
+        "تبصره‌ها"
+      ],
+      "text": "این قرارداد در ۵ ماده و ۲ تبصره تنظیم شده و برای هر دو طرف لازم‌الاجراست. کلیه کتاب‌ها و مستندات تحویلی متعلق به کارفرما خواهد بود.",
+      "level": 0,
+      "list_marker": "",
+      "list_index": 0,
+      "list_id": null,
+      "ordered": false,
+      "rows": [],
+      "caption": "",
+      "heading_number": "",
+      "source": {
+        "file": "contract.docx",
+        "page": null,
+        "bbox": null,
+        "paragraph_index": 16,
+        "page_width": null,
+        "page_height": null
+      },
+      "meta": {
+        "style": "Normal"
+      }
+    }
+  ]
+}

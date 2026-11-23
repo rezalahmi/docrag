@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "error_count": 0,
+  "warning_count": 0,
+  "issues": [],
+  "metrics": {
+    "element_count": 20,
+    "element_counts": {
+      "heading": 6,
+      "paragraph": 6,
+      "list_item": 5,
+      "footnote": 2,
+      "table": 1
+    },
+    "empty_textual_elements": 0,
+    "heading_level_distribution": {
+      "1": 5,
+      "2": 1
+    },
+    "tables": 1,
+    "table_row_counts": [
+      5
+    ],
+    "section_count": 5,
+    "chunk_count": 17,
+    "chunk_tokens_min": 5,
+    "chunk_tokens_max": 344,
+    "chunk_tokens_mean": 63.7,
+    "chunk_coverage": 1.0,
+    "chunk_type_counts": {
+      "text": 12,
+      "list": 2,
+      "footnote": 2,
+      "table": 1
+    }
+  }
+}

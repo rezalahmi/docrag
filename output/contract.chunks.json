@@ -1,0 +1,394 @@
+[
+  {
+    "id": "contract::chunk::0001",
+    "type": "text",
+    "text": "قرارداد همکاری خدمات نرم‌افزاری",
+    "section": [
+      "قرارداد همکاری خدمات نرم‌افزاری"
+    ],
+    "source_elements": [
+      "contract.docx::p::0::heading"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 0,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 22,
+    "meta": {
+      "heading": true,
+      "level": 1
+    }
+  },
+  {
+    "id": "contract::chunk::0002",
+    "type": "text",
+    "text": "مقدمه و طرفین",
+    "section": [
+      "مقدمه و طرفین"
+    ],
+    "source_elements": [
+      "contract.docx::p::1::heading"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 1,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 11,
+    "meta": {
+      "heading": true,
+      "level": 1
+    }
+  },
+  {
+    "id": "contract::chunk::0003",
+    "type": "text",
+    "text": "این قرارداد در تاریخ ۱۴۰۳/۰۸/۰۱ بین شرکت فناوری‌نوین پارس (کارفرما) و اقای مهندس رضا محمدی (پیمانکار) منعقد می‌گردد. طرفین توافق کردند که می‌باید تمامی تعهدات را رعایت نمایند.",
+    "section": [
+      "مقدمه و طرفین"
+    ],
+    "source_elements": [
+      "contract.docx::p::2::para"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 3,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 137,
+    "meta": {}
+  },
+  {
+    "id": "contract::chunk::0004",
+    "type": "text",
+    "text": "تعاریف",
+    "section": [
+      "مقدمه و طرفین",
+      "تعاریف"
+    ],
+    "source_elements": [
+      "contract.docx::p::3::heading"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 3,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 5,
+    "meta": {
+      "heading": true,
+      "level": 2
+    }
+  },
+  {
+    "id": "contract::chunk::0005",
+    "type": "text",
+    "text": "کارفرما: شرکت درخواست‌کننده خدمات. پیمانکار: شخص حقیقی یا حقوقی اجراکننده. سیستم: نرم‌افزار موضوع قرارداد شامل کلیه ماژول‌ها.",
+    "section": [
+      "مقدمه و طرفین",
+      "تعاریف"
+    ],
+    "source_elements": [
+      "contract.docx::p::4::para"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 5,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 96,
+    "meta": {}
+  },
+  {
+    "id": "contract::chunk::0006",
+    "type": "text",
+    "text": "دامنه خدمات",
+    "section": [
+      "دامنه خدمات"
+    ],
+    "source_elements": [
+      "contract.docx::p::5::heading"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 5,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 8,
+    "meta": {
+      "heading": true,
+      "level": 1
+    }
+  },
+  {
+    "id": "contract::chunk::0007",
+    "type": "text",
+    "text": "پیمانکار متعهد می‌گردد خدمات زیر را ارائه نماید:",
+    "section": [
+      "دامنه خدمات"
+    ],
+    "source_elements": [
+      "contract.docx::p::6::para"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 0,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 37,
+    "meta": {}
+  },
+  {
+    "id": "contract::chunk::0008",
+    "type": "list",
+    "text": "۱. طراحی معماری سیستم و پایگاه داده\n۲. پیاده‌سازی ماژول‌های اصلی و APIها\n۳. انجام تست‌های عملکردی و امنیتی",
+    "section": [
+      "دامنه خدمات"
+    ],
+    "source_elements": [
+      "contract.docx::p::7::list::7",
+      "contract.docx::p::8::list::8",
+      "contract.docx::p::9::list::9"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 7,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 83,
+    "meta": {
+      "item_count": 3
+    }
+  },
+  {
+    "id": "contract::chunk::0009",
+    "type": "text",
+    "text": "موارد زیر خارج از دامنه این قرارداد است:",
+    "section": [
+      "دامنه خدمات"
+    ],
+    "source_elements": [
+      "contract.docx::p::10::para"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 10,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 25,
+    "meta": {}
+  },
+  {
+    "id": "contract::chunk::0010",
+    "type": "list",
+    "text": " تامین زیرساخت سرور و شبکه\n پشتیبانی پس از تحویل نهایی",
+    "section": [
+      "دامنه خدمات"
+    ],
+    "source_elements": [
+      "contract.docx::p::11::list::11",
+      "contract.docx::p::12::list::12"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 11,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 43,
+    "meta": {
+      "item_count": 2
+    }
+  },
+  {
+    "id": "contract::chunk::0011",
+    "type": "text",
+    "text": "تعهدات مالی",
+    "section": [
+      "تعهدات مالی"
+    ],
+    "source_elements": [
+      "contract.docx::p::13::heading"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 13,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 8,
+    "meta": {
+      "heading": true,
+      "level": 1
+    }
+  },
+  {
+    "id": "contract::chunk::0012",
+    "type": "text",
+    "text": "مبلغ کل قرارداد ۴٬۵۰۰٬۰۰۰٬۰۰۰ ریال است و بر اساس مراحل پیشرفت پرداخت می‌شود.",
+    "section": [
+      "تعهدات مالی"
+    ],
+    "source_elements": [
+      "contract.docx::p::14::para"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 13,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 71,
+    "meta": {}
+  },
+  {
+    "id": "contract.docx::chunk::0013",
+    "type": "footnote",
+    "text": "مبلغ قرارداد به‌صورت ناخالص و شامل مالیات بر ارزش افزوده است.",
+    "section": [
+      "تعهدات مالی"
+    ],
+    "source_elements": [
+      "contract.docx::p14::footnote::1"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 14,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 40,
+    "meta": {
+      "footnote_id": 1
+    }
+  },
+  {
+    "id": "contract.docx::chunk::0014",
+    "type": "footnote",
+    "text": "هرگونه تاخیر در پرداخت مشمول جریمه روزانه ۰٫۵ درصد خواهد بود.",
+    "section": [
+      "تعهدات مالی"
+    ],
+    "source_elements": [
+      "contract.docx::p14::footnote::2"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 14,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 49,
+    "meta": {
+      "footnote_id": 2
+    }
+  },
+  {
+    "id": "contract.docx::chunk::0015",
+    "type": "table",
+    "text": "ستون‌ها: ردیف | شرح خدمات | مبلغ (ریال) | مدت پرداخت\n\nردیف: ۱\nشرح خدمات: طراحی و تحلیل\nمبلغ (ریال): ۵۰۰٬۰۰۰٬۰۰۰\nمدت پرداخت: پیش‌پرداخت\n\nردیف: ۲\nشرح خدمات: پیاده‌سازی\nمبلغ (ریال): ۲٬۵۰۰٬۰۰۰٬۰۰۰\nمدت پرداخت: ماهانه\n\nردیف: ۳\nشرح خدمات: تست و رفع اشکال\nمبلغ (ریال): ۱٬۰۰۰٬۰۰۰٬۰۰۰\nمدت پرداخت: پس از تحویل\n\nردیف: ۴\nشرح خدمات: اموزش و مستندسازی\nمبلغ (ریال): اموزش و مستندسازی",
+    "section": [
+      "تعهدات مالی"
+    ],
+    "source_elements": [
+      "contract.docx::tbl::0"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 14,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 344,
+    "meta": {
+      "table_id": "contract.docx::tbl::0",
+      "row_count": 5,
+      "col_count": 4
+    }
+  },
+  {
+    "id": "contract::chunk::0016",
+    "type": "text",
+    "text": "تبصره‌ها",
+    "section": [
+      "تبصره‌ها"
+    ],
+    "source_elements": [
+      "contract.docx::p::15::heading"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 15,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 8,
+    "meta": {
+      "heading": true,
+      "level": 1
+    }
+  },
+  {
+    "id": "contract::chunk::0017",
+    "type": "text",
+    "text": "این قرارداد در ۵ ماده و ۲ تبصره تنظیم شده و برای هر دو طرف لازم‌الاجراست. کلیه کتاب‌ها و مستندات تحویلی متعلق به کارفرما خواهد بود.",
+    "section": [
+      "تبصره‌ها"
+    ],
+    "source_elements": [
+      "contract.docx::p::16::para"
+    ],
+    "source": {
+      "file": "contract.docx",
+      "page": null,
+      "bbox": null,
+      "paragraph_index": 15,
+      "page_width": null,
+      "page_height": null
+    },
+    "token_count": 96,
+    "meta": {}
+  }
+]
