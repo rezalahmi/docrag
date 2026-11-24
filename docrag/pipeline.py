@@ -60,7 +60,9 @@ class Pipeline:
 
     # -- run -------------------------------------------------------------- #
     def run(self, path: str | Path) -> PipelineResult:
-        path = Path(path)
+        # Keep ``path`` as-is: a URL string must not be forced through Path()
+        # (it collapses the ``//`` and corrupts the scheme). Each parser casts
+        # to Path internally only when it actually needs a filesystem path.
         parser = get_parser(path)
         parser.normalizer = self.normalizer
         doc = parser.parse(path)
@@ -76,7 +78,9 @@ class Pipeline:
     def write_outputs(self, result: PipelineResult, out_dir: str | Path) -> PipelineResult:
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
-        stem = slugify(Path(result.document.source_file).stem) or "document"
+        stem = slugify(result.document.id) or slugify(
+            Path(result.document.source_file).stem
+        ) or "document"
 
         ir_path = out_dir / f"{stem}.json"
         ir_path.write_text(
@@ -114,7 +118,9 @@ class Pipeline:
         input_dir = Path(input_dir)
         files = sorted(
             p for p in input_dir.rglob("*")
-            if p.is_file() and p.suffix.lower() in {".pdf", ".docx"}
+            if p.is_file() and p.suffix.lower() in {
+                ".pdf", ".docx", ".xlsx", ".xls", ".html", ".htm",
+            }
         )
         results: list[PipelineResult] = []
         for f in files:

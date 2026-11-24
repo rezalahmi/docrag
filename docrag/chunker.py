@@ -382,6 +382,19 @@ class SemanticChunker:
 
         if full_tokens <= self.max_tokens:
             counter += 1
+            meta = {
+                "table_id": el.id,
+                "row_count": len(rows),
+                "col_count": ncols,
+            }
+            refs = self._cell_refs(rows, headers, ncols)
+            if refs:
+                meta["cell_refs"] = refs
+            nr = list(el.meta.get("needs_review", []))
+            if nr:
+                meta["needs_review"] = nr
+            if el.meta.get("hidden"):
+                meta["hidden"] = True
             chunks.append(
                 Chunk(
                     id=chunk_id(slugify(el.source.file), counter),
@@ -391,11 +404,7 @@ class SemanticChunker:
                     source_elements=[el.id],
                     source=el.source,
                     token_count=full_tokens,
-                    meta={
-                        "table_id": el.id,
-                        "row_count": len(rows),
-                        "col_count": ncols,
-                    },
+                    meta=meta,
                 )
             )
             return counter
@@ -436,6 +445,20 @@ class SemanticChunker:
         for part in parts:
             text = self._table_text_for_part(part, headers, ncols, header_row)
             counter += 1
+            meta = {
+                "table_id": el.id,
+                "row_count": len(part),
+                "col_count": ncols,
+                "split": "row",
+            }
+            refs = self._cell_refs(part, headers, ncols)
+            if refs:
+                meta["cell_refs"] = refs
+            nr = list(el.meta.get("needs_review", []))
+            if nr:
+                meta["needs_review"] = nr
+            if el.meta.get("hidden"):
+                meta["hidden"] = True
             chunks.append(
                 Chunk(
                     id=chunk_id(slugify(el.source.file), counter),
@@ -445,12 +468,7 @@ class SemanticChunker:
                     source_elements=[el.id],
                     source=el.source,
                     token_count=count_tokens(text),
-                    meta={
-                        "table_id": el.id,
-                        "row_count": len(part),
-                        "col_count": ncols,
-                        "split": "row",
-                    },
+                    meta=meta,
                 )
             )
         return counter
@@ -511,6 +529,27 @@ class SemanticChunker:
             out.append((col, cell.col_span, cell.text))
             col += cell.col_span
         return out
+
+    @staticmethod
+    def _cell_refs(rows: list[TableRow], headers: list[str], ncols: int) -> dict[str, str]:
+        """Map ``header → cell address`` for cells that carry one.
+
+        Only XLSX-originated tables populate :attr:`TableCell.address`, so this
+        returns ``{}`` for PDF/DOCX tables and stays out of their chunk meta.
+        For a multi-row part the first address seen for a column wins.
+        """
+        refs: dict[str, str] = {}
+        for r in rows:
+            if r.is_header:
+                continue
+            col = 0
+            for cell in r.cells:
+                for k in range(cell.col_span):
+                    idx = col + k
+                    if idx < len(headers) and cell.address:
+                        refs.setdefault(headers[idx], cell.address)
+                    col += 1
+        return refs
 
     @staticmethod
     def _header_block(headers: list[str]) -> str:

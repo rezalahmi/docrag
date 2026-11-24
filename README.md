@@ -1,12 +1,16 @@
 # docrag — Persian Document Preprocessing Pipeline for RAG
 
-`docrag` turns PDF and DOCX files (with a focus on **Persian / Farsi** content)
-into a structured, traceable intermediate representation (IR) and from it
-derives three artifacts: a **JSON IR**, an **HTML preview** for visual QA, and
-**embedding-ready chunks**. It is deliberately decoupled from any vector
-database: the IR is the single source of truth, and chunks/HTML are derived
-from it so that evidence can always be reconstructed and validated before
-anything is embedded.
+`docrag` turns **PDF, DOCX, XLSX and URL/HTML** sources (with a focus on
+**Persian / Farsi** content) into a structured, traceable intermediate
+representation (IR) and from it derives three artifacts: a **JSON IR**, an
+**HTML preview** for visual QA, and **embedding-ready chunks**. It is
+deliberately decoupled from any vector database: the IR is the single source of
+truth, and chunks/HTML are derived from it so that evidence can always be
+reconstructed and validated before anything is embedded.
+
+A small field-aware :class:`~docrag.retriever.Retriever` is included to
+acceptance-test that the chunks carry enough structure for exact-value answers
+(e.g. "سود دوره ۱۴۰۰ چقدر بوده؟" answered from the right cell, not a fuzzy match).
 
 > Designed as the ingestion stage for Hoshi-Bot (or any Persian RAG stack).
 > The IR JSON plugs directly into an embedding step; nothing here depends on a
@@ -17,45 +21,51 @@ anything is embedded.
 ## Architecture
 
 ```
-            PDF / DOCX
-                │
-        ┌───────┴────────┐
-        ▼                ▼
-   PDF Parser       DOCX Parser        ← Parser Layer
-   (pdfplumber +    (python-docx +
-    pypdfium2 +       numbering XML +
-    tables +          merge cells)
-    reading order)
-        │                │
-        └───────┬────────┘
-                ▼
+        PDF / DOCX / XLSX / URL
+                  │
+   ┌──────┬───────┼────────┬────────┐
+   ▼      ▼       ▼        ▼        ▼
+ PDF    DOCX    XLSX      URL     (shared)     ← Parser Layer
+Parser  Parser  Parser   Parser   Normalizer
+(pdfplumber (python-docx (openpyxl: (link2rag port
+ +pypdfium2  + numbering  table     → markdownify,
+ +tables +   XML + merge  detect +  bs4 dedup +
+ reading     cells +       multi-   front-matter)
+ order)      footnotes)    level hdr
+                                        + merged + formula)
+   └──────┴───────┼────────┴────────┘
+                  ▼
         Document IR (JSON)             ← file-type-independent model
    sections / paragraphs / lists /
-   tables (with spans) / footnotes /
-   source refs (page + bbox / paragraph)
-                │
-        ┌───────┼───────┐
-        ▼       ▼       ▼
-   Chunker  Renderer  Validator       ← derived artefacts
-   (semantic, (HTML QA) (schema +
+   tables (with spans + cell addresses) /
+   footnotes / source refs
+                  │
+        ┌─────────┼─────────┐
+        ▼         ▼         ▼
+   Chunker   Renderer  Validator     ← derived artefacts
+   (semantic  (HTML QA) (schema +
     per-type)            refs + quality)
         │
         ▼
    chunks JSON  ──►  Embedding (your stack)
+        │
+        ▼
+   Retriever (field-aware, optional)  ← acceptance-test exact answers
 ```
 
 **Four layers** (each replaceable independently):
 
 | Layer | Module | Responsibility |
 |---|---|---|
-| Parser | `docrag.parsers` | PDF (pdfplumber + pypdfium2) / DOCX (python-docx) → IR |
+| Parser | `docrag.parsers` | PDF / DOCX / XLSX / URL → IR (one parser per source type) |
 | Document IR | `docrag.ir` | File-type-independent structured model |
 | Semantic Chunker | `docrag.chunker` | Per-type chunking (text / list / table / footnote) |
 | Evaluation | `docrag.validator` | Schema + reference integrity + quality metrics |
 
-Supporting modules: `docrag.normalizer` (full Persian normalisation),
-`docrag.renderer` (HTML QA), `docrag.pipeline` (orchestrator), `docrag.cli`
-(Click CLI), `docrag.api` (FastAPI REST).
+Supporting modules: `docrag.normalizer` (full Persian normalisation + search
+keys), `docrag.renderer` (HTML QA), `docrag.pipeline` (orchestrator),
+`docrag.retriever` (field-aware exact-value retriever over chunks),
+`docrag.cli` (Click CLI), `docrag.api` (FastAPI REST).
 
 ---
 
@@ -82,7 +92,12 @@ This installs the `docrag` command-line tool and an importable `docrag` package.
 # Full pipeline on one file → IR JSON, HTML, chunks JSON, validation report
 docrag process input/contract.docx --output output --max-tokens 400
 
-# Whole directory of PDFs/DOCXs
+# XLSX and URL/HTML are supported with the same command
+docrag process input/صورت_مالی.xlsx --output output
+docrag process https://example.com/fa --output output
+docrag process input/page.html --output output
+
+# Whole directory of PDFs/DOCX/XLSX/HTML
 docrag process input/ --output output --max-tokens 400
 
 # Re-derive chunks from an existing IR (no re-parsing)
@@ -140,6 +155,70 @@ curl -F "file=@contract.docx" "http://localhost:8080/process?max_tokens=400" \
 
 Endpoints: `GET /healthz`, `POST /process` (upload file → IR+chunks+report),
 `POST /chunk` (IR JSON → chunks), `POST /normalize` (text → normalised text).
+
+---
+
+## Excel & URL ingestion
+
+### XLSX — Excel-aware parsing
+
+A spreadsheet is not flat text: "سود دوره ۱۴۰۰ چقدر بوده؟" must be answered from
+the **cell** that holds the profit for 1400, not from a fuzzy text match. The
+XLSX parser (`docrag.parsers.xlsx_parser`) therefore:
+
+- **Detects tables** by blank-row/blank-column splitting (merged-aware, so a
+  merged title or parent header is not mistaken for a gap).
+- **Combines multi-level headers**: a parent header merged across columns plus
+  its child row collapses to one header per column (`درآمد` + `کل` → `درآمد کل`).
+- **Propagates merged data cells** to each spanned row so every chunk is
+  self-contained, while the anchor cell keeps its value; the chunk's
+  `cell_refs` map points each header back to the anchor cell address.
+- **Handles formulas**: the workbook is opened twice (normal + `data_only`). A
+  formula with a cached result yields that result; a formula without one is
+  flagged `needs_review` and the formula string never reaches a chunk.
+- **Keeps identifiers exact**: phone numbers, codes and IDs stay as strings
+  (leading zeros survive) and `آ` is not folded to `ا` in cell display.
+- **Tracks hidden rows/filters** in metadata instead of dropping them.
+
+Each data row is emitted as its own `TABLE` element (header row + that one data
+row), so the chunker produces one self-contained chunk per row carrying a
+`colname: value` body and a `cell_refs` map (`{"سود": "F4"}`) for citation.
+
+### URL / HTML — link2rag port (permissive)
+
+The URL parser (`docrag.parsers.url_parser`) ingests a web page (or a local
+`.html` file) through the `link2rag` approach, ported to permissive
+dependencies: fetch with `urllib` → strip non-content DOM with BeautifulSoup →
+de-duplicate the mobile/desktop duplicate blocks WordPress/Elementor and Next.js
+render → convert to Markdown with **markdownify** (MIT) → parse into IR
+(headings, paragraphs, lists, pipe tables) with a YAML front-matter block
+carrying title / source URL / lang / description.
+
+> **Why not `html2text`?** The original `link2rag` used `html2text` for the
+> HTML→Markdown step, but `html2text` is **GPL-3.0** — a copyleft license that
+> would force any web service linking it to also publish its source. docrag
+> swaps it for `markdownify` (MIT); the de-duplication, filtering and
+> post-processing logic is preserved unchanged.
+
+Optional dynamic rendering (accordion expansion, scroll-based hydration) shells
+out to the `agent-browser` CLI when present — it is **not** a Python dependency
+and is silently skipped when the tool is absent.
+
+```python
+from docrag import Pipeline, Retriever
+
+pipe = Pipeline()
+# One pipeline, four source types:
+chunks = []
+for src in ["report.pdf", "contract.docx", "صورت_مالی.xlsx", "https://site.ir/fa"]:
+    chunks.extend(pipe.run(src).chunks)
+
+ret = Retriever(chunks)
+ans = ret.query("سود دوره ۱۴۰۰ چقدر بوده؟")
+print(ans.value)        # "۴٬۰۰۰٬۰۰۰٬۰۰۰"
+print(ans.source)       # {filename, sheet, row, cell: "F4", range}
+print(ans.needs_review) # False (the formula had a cached value)
+```
 
 ---
 
@@ -248,17 +327,22 @@ Run `docrag validate …` or read `*.report.json`.
 
 ```bash
 pip install -e ".[dev]"
-pytest                  # 75 tests
+pytest                  # 111 tests
 ```
 
-Fixtures live in `fixtures/` (a Persian legal contract DOCX with merged cells,
-lists and footnotes; a Persian financial-report PDF with a table). Regenerate
-them with `python scripts/build_fixtures.py` (requires LibreOffice `soffice`
-for the DOCX→PDF conversion).
+Fixtures live in `fixtures/`: a Persian legal contract DOCX (merged cells,
+lists, footnotes), a Persian financial-report PDF (table + headings), two
+Persian XLSX workbooks (an agencies list with a merged `منطقه` column + hidden
+row, and a multi-level-header financial statement with `سود` formulas recalced
+via LibreOffice and `نرخ رشد` formulas stripped to exercise the
+`needs_review` path), and a Persian sample HTML page (headings, table, list,
+mobile/desktop duplicate footer). Regenerate them with
+`python scripts/build_fixtures.py` (requires LibreOffice `soffice` for the
+DOCX→PDF conversion and the XLSX formula recalc).
 
 ---
 
-## Limitations (v2)
+## Limitations (v3)
 
 | Capability | Status |
 |---|---|
@@ -270,10 +354,16 @@ for the DOCX→PDF conversion).
 | PDF table cell text (RTL-correct) | ✅ implemented (PDFium bidi reordering) |
 | PDF reading order | ~ approximate (2-column heuristic) |
 | PDF heading detection | ~ font-size heuristic |
-| OCR of scanned pages | ❌ not in v2 (removed by design) |
+| **XLSX table detection** | ✅ implemented (blank-row/col split, merged-aware) |
+| **XLSX multi-level headers** | ✅ implemented (parent+child combination) |
+| **XLSX merged cells** | ✅ implemented (propagated to rows, anchor preserved) |
+| **XLSX formulas** | ✅ cached value used; missing → `needs_review` |
+| **URL/HTML → Markdown → IR** | ✅ implemented (link2rag port, markdownify) |
+| **URL dynamic rendering** | ~ optional via `agent-browser` CLI (not a Python dep) |
+| OCR of scanned pages | ❌ not in scope |
 | PDF merged-cell detection | ❌ pdfplumber gives no merge info → span-1 |
 | Equation extraction | ❌ not yet |
-| Retrieval evaluation | ❌ not yet (evaluation layer = validation + fixtures) |
+| Retrieval evaluation | ❌ not yet (Retriever is for acceptance testing) |
 
 The IR JSON is intentionally **not** wired straight into embedding: validate
 and reconstruct evidence first, then embed.
@@ -288,21 +378,27 @@ docrag/
 ├── README.md
 ├── docrag/
 │   ├── ir.py              # Document IR (dataclasses)
-│   ├── normalizer.py      # Persian normaliser
+│   ├── normalizer.py      # Persian normaliser + search keys
 │   ├── ids.py             # stable id generation
 │   ├── tokens.py          # tiktoken token counting
-│   ├── chunker.py         # semantic chunker
+│   ├── chunker.py         # semantic chunker (table cell_refs/needs_review)
 │   ├── renderer.py        # HTML renderer
 │   ├── validator.py       # validation + quality report
-│   ├── pipeline.py        # orchestrator
+│   ├── retriever.py       # field-aware retriever (acceptance testing)
+│   ├── pipeline.py        # orchestrator (URL + multi-type process_dir)
 │   ├── cli.py             # Click CLI
 │   ├── api.py             # FastAPI REST
 │   └── parsers/
 │       ├── base.py
 │       ├── docx_parser.py
-│       └── pdf_parser.py
-├── tests/                 # pytest suite
-├── fixtures/              # Persian contract.docx + financial_report.pdf
+│       ├── pdf_parser.py
+│       ├── xlsx_parser.py     # openpyxl: tables, multi-level hdr, merged, formula
+│       ├── url_parser.py      # URL/local HTML → IR
+│       ├── html_to_md.py      # link2rag port (markdownify, not GPL html2text)
+│       └── md_to_ir.py        # lightweight Markdown → IR
+├── tests/                 # pytest suite (111 tests)
+├── fixtures/              # contract.docx, financial_report.pdf,
+│                          # نمایندگی‌ها.xlsx, صورت_مالی.xlsx, sample_page.html
 ├── scripts/build_fixtures.py
 └── examples/demo.py
 ```
@@ -323,6 +419,9 @@ obligation.
 | `pdfplumber` | PDF page geometry, character data, table structure | MIT |
 | `pypdfium2` | PDF text extraction with native bidi reordering (wraps Google PDFium) | BSD-3-Clause / Apache-2.0 |
 | `python-docx` | DOCX parsing | MIT |
+| `openpyxl` | XLSX parsing (workbook, merged cells, formulas, formats) | MIT |
+| `beautifulsoup4` | HTML DOM parsing + de-duplication for URL ingestion | MIT |
+| `markdownify` | HTML → Markdown for URL ingestion | MIT |
 | `tiktoken` | Token counting for chunk sizing | MIT |
 | `click` | CLI | BSD-3-Clause |
 | `pydantic` | IR validation | MIT |
@@ -335,3 +434,10 @@ obligation.
 > pdfplumber + pypdfium2, which produce equivalent results (including correct
 > Persian RTL ordering via PDFium's bidi implementation) under permissive
 > licenses.
+
+> **Why not `html2text` for URLs?** The original `link2rag` used `html2text`
+> for HTML→Markdown, but `html2text` is **GPL-3.0** — the same copyleft problem
+> as PyMuPDF. docrag uses `markdownify` (MIT) instead, preserving the
+> retrieval-friendly de-duplication and post-processing logic. (LibreOffice,
+> MPL-2.0, is used only as a build-time tool to recalc the sample XLSX formulas
+> and to convert the sample DOCX→PDF; it never enters the runtime tree.)

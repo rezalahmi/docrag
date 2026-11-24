@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "docrag"
-version = "0.2.0"
-description = "Document preprocessing pipeline for Persian RAG: PDF & DOCX to structured IR, chunks, and HTML."
+version = "0.3.0"
+description = "Document preprocessing pipeline for Persian RAG: PDF, DOCX, XLSX and URL to structured IR, chunks, and HTML."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "docrag contributors" }]
-keywords = ["rag", "pdf", "docx", "persian", "farsi", "chunking", "nlp", "document-processing"]
+keywords = ["rag", "pdf", "docx", "xlsx", "url", "persian", "farsi", "chunking", "nlp", "document-processing"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -24,6 +24,9 @@ dependencies = [
     "pdfplumber>=0.11",
     "pypdfium2>=4.25",
     "python-docx>=1.1",
+    "openpyxl>=3.1",
+    "beautifulsoup4>=4.12",
+    "markdownify>=0.13",
     "tiktoken>=0.5",
     "click>=8.1",
     "pydantic>=2.0",

@@ -72,12 +72,17 @@ class TableCell:
     *covered* by a vertical merge that started above it, ``vmerge`` is
     ``"continue"`` and ``text`` is empty; the originating cell has
     ``vmerge="restart"``. A normal cell has ``vmerge=None``.
+
+    ``address`` is the spreadsheet cell coordinate (e.g. ``"F4"``) for tables
+    originating from XLSX. PDF/DOCX cells leave it empty, so the field is
+    purely opt-in per source type and never affects non-spreadsheet tables.
     """
 
     text: str = ""
     row_span: int = 1
     col_span: int = 1
     vmerge: Optional[str] = None  # "restart" | "continue" | None
+    address: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -173,6 +178,7 @@ class Element:
                         row_span=c.get("row_span", 1),
                         col_span=c.get("col_span", 1),
                         vmerge=c.get("vmerge"),
+                        address=c.get("address", ""),
                     )
                     for c in r.get("cells", [])
                 ],

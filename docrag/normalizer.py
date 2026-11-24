@@ -220,6 +220,35 @@ class Normalizer:
 
     __call__ = normalize
 
+    # -- search keys ------------------------------------------------------ #
+    def search_key(self, text: str) -> str:
+        """A lossy key for *matching*, not display.
+
+        Normalises then strips ZWNJ and all whitespace and lower-cases Latin,
+        so ``"می کند"``, ``"می‌کند"`` and ``"میکند"`` collide, and a Latin
+        ``1400`` matches a Persian ``۱۴۰۰`` (``normalize`` already folds Latin
+        digits to Persian by default). Use :meth:`numeric_search_key` for
+        amounts that may carry grouping separators or currency words.
+        """
+        if not text:
+            return ""
+        s = self.normalize(text)
+        s = s.replace(ZWNJ, "")
+        s = re.sub(r"\s+", "", s)
+        return s.lower()
+
+    def numeric_search_key(self, text: str) -> str:
+        """Like :meth:`search_key` but also drops grouping separators and
+        common currency words/symbols so ``"۱٬۰۰۰٬۰۰۰٬۰۰۰"`` matches
+        ``"1000000000"``."""
+        s = self.search_key(text)
+        for ch in ("٬", ",", "،", "﷼", "$", "€"):
+            s = s.replace(ch, "")
+        for word in ("ریال", "تومان", "rial", "toman"):
+            s = s.replace(word, "")
+        s = s.replace("٫", ".")  # Arabic decimal separator → dot
+        return s
+
     # -- internals -------------------------------------------------------- #
     def _map_letters(self, text: str) -> str:
         for src, dst in _LETTER_MAP.items():
