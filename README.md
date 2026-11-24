@@ -271,7 +271,31 @@ Every chunk carries `section`, `source_elements` (IR element ids it came from)
 and a primary `source` (file + page/bbox or paragraph) so a retrieved chunk can
 always be traced back to the exact origin.
 
----
+### Markdown export (visual review)
+
+`docrag process` emits `chunks.json` as the canonical chunk output for the RAG
+feed. For human-friendly visual review, the bundled `scripts/chunks_to_md.py`
+helper renders any `chunks.json` into a markdown file (standard library only,
+no extra dependencies).
+
+```bash
+# Full conversion
+python scripts/chunks_to_md.py out/<name>/<name>.chunks.json out/<name>/<name>.md
+
+# Quick preview (first 50 chunks)
+python scripts/chunks_to_md.py out/<name>/<name>.chunks.json out/<name>/preview.md --limit 50
+```
+
+**Output structure:**
+
+- One `#### <chunk_id>` heading per chunk, with `type` / `row` / `range` hints.
+- Chunks are grouped under `## Sheet:` and `### Table:` headings **only when
+  more than one sheet/table is present**, keeping single-sheet output clean.
+- Chunks are separated by `---` horizontal rules.
+
+`chunks.json` remains the source of truth for embedding; the markdown file is
+for visual inspection and debugging only.
+
 
 ## Why a Persian-specific pipeline?
 
@@ -399,7 +423,9 @@ docrag/
 ├── tests/                 # pytest suite (111 tests)
 ├── fixtures/              # contract.docx, financial_report.pdf,
 │                          # نمایندگی‌ها.xlsx, صورت_مالی.xlsx, sample_page.html
-├── scripts/build_fixtures.py
+├── scripts/
+│       ├──build_fixtures.py
+│       └── build_fixtures.py
 └── examples/demo.py
 ```
 
